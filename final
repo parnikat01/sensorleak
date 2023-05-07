@@ -1,0 +1,69 @@
+#include <SoftwareSerial.h>
+
+// Configure software serial port
+SoftwareSerial SIM900(7, 8);
+
+// MQ5 sensor pin
+const int mq5Pin = A0;
+
+// Phone number to call
+const char* phoneNumber = "+918779661839";
+
+void setup() {
+  // Initialize the MQ5 sensor pin
+  pinMode(mq5Pin, INPUT);
+
+  // Initialize the software serial port
+  SIM900.begin(19200);
+  delay(20000);
+}
+
+void loop() {
+  // Read the MQ5 sensor value
+  int mq5Value = analogRead(mq5Pin);
+
+  // Check if the gas level is above a certain threshold
+  if (mq5Value > 150) {
+    // Send SMS
+    sendSMS();
+
+    // Make a call
+    makeCall();
+
+    // Wait for a few seconds to avoid sending multiple messages/calls
+    delay(30000);
+  }
+}
+
+void sendSMS() {
+  // Set SMS mode
+  SIM900.println("AT+CMGF=1");
+  delay(100);
+
+  // Set the phone number
+  SIM900.print("AT+CMGS=\"");
+  SIM900.print(phoneNumber);
+  SIM900.println("\"");
+  delay(1000);
+
+  // Set the SMS message
+  SIM900.println("Gas detected by MQ5 sensor.");
+  delay(100);
+
+  // Send the SMS
+  SIM900.write(26);
+  delay(1000);
+}
+
+void makeCall() {
+  // Dial the phone number
+  SIM900.print("ATD");
+  SIM900.print(phoneNumber);
+  SIM900.println(";");
+  delay(10000);
+
+  // Hang up the call
+  SIM900.println("ATH");
+  delay(1000);
+}
+
